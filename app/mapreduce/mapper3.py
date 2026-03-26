@@ -13,16 +13,15 @@ for line in sys.stdin:
     if not line:
         continue
     parts = line.split('\t')
-    if len(parts) != 3:
+    if len(parts) < 3:
         sys.stderr.write(f"Skipping line with {len(parts)} fields: {line}\n")
         continue
-    doc_id, doc_title = parts[0], parts[1]
-    # The text may contain tabs; join remaining parts
-    text = '\t'.join(parts[2:])
+    doc_id = parts[0]               # first field is doc_id, title is parts[1] (not needed)
+    text = '\t'.join(parts[2:])     # reconstruct text in case it contains tabs
 
     doc_id = unquote(doc_id)
-    doc_title = unquote(doc_title)
     text = unquote(text)
 
     for word in text.split():
-        print(f"{word}\t{doc_id}\t1")
+        # Output (doc_id, 1) for each word occurrence
+        print(f"{doc_id}\t1")
