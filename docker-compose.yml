@@ -2,6 +2,9 @@ services:
   cluster-master:
     image: firasj/spark-docker-cluster
     container_name: cluster-master
+    mem_limit: 5g
+    environment:
+      - JVM_OPTS=-Xms4g -Xmx4g -XX:+UseG1GC
     ports:
       - "8088:8088"
       - "4040:4040"
@@ -14,18 +17,21 @@ services:
       - spark-cluster
     depends_on:
       - cluster-slave-1
-      - cassandra-server
+      - scylla-server
     hostname: cluster-master
     tty: true
     working_dir: /app
     # You can comment the entrypoint to run the script manually inside the container
-    entrypoint: 
-      - bash
-      - /app/app.sh
+    # entrypoint: 
+      # - bash
+      # - /app/app.sh
     
   cluster-slave-1:
     image: firasj/spark-docker-cluster
     container_name: cluster-slave-1
+    mem_limit: 2g
+    environment:
+      - JVM_OPTS=-Xms1g -Xmx1g -XX:+UseG1GC
     networks:
       - spark-cluster
     hostname: cluster-slave-1
@@ -39,9 +45,13 @@ services:
   #     - cluster-slave-1
   #   hostname: cluster-slave-2
   #   tty: true
-  cassandra-server:
-    image: cassandra
-    container_name: cassandra-server
+  scylla-server:
+    image: scylladb/scylla
+    container_name: scylla-server
+    # Enforce memory limits
+    mem_limit: 4g
+    environment:
+      - SCYLLA_CMDLINE_OPTIONS=--memory 2G --smp 2 --overprovisioned
     ports:
       - "7000:7000"
     networks:
