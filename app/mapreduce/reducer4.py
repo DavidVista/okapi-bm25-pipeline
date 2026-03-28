@@ -12,7 +12,7 @@ for line in sys.stdin:
         sys.stderr.write(f"Skipping line with {len(parts)} fields: {line}\n")
         continue
 
-    # part[0]: 'avg', part[1]: count
+    # part[0]: 'key', part[1]: count
     val = parts[1]
 
     try:

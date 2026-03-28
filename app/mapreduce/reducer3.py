@@ -1,6 +1,7 @@
 import sys
 
 current_doc = None
+current_title = None
 total = 0
 
 for line in sys.stdin:
@@ -8,10 +9,10 @@ for line in sys.stdin:
     if not line:
         continue
     parts = line.split('\t')
-    if len(parts) != 2:
+    if len(parts) != 3:
         sys.stderr.write(f"Skipping line with {len(parts)} fields: {line}\n")
         continue
-    doc_id, count = parts[0], parts[1]
+    doc_id, doc_title, count = parts[0], parts[1], parts[2]
 
     try:
         count = int(count)
@@ -23,9 +24,10 @@ for line in sys.stdin:
         total += count
     else:
         if current_doc is not None:
-            print(f"{current_doc}\t{total}")
+            print(f"{current_doc}\t{current_title}\t{total}")
         current_doc = doc_id
+        current_title = doc_title
         total = count
 
 if current_doc is not None:
-    print(f"{current_doc}\t{total}")
+    print(f"{current_doc}\t{current_title}\t{total}")
