@@ -53,6 +53,7 @@ tf_df.write \
 
 dl_schema = StructType([
     StructField("doc_id", StringType(), True),
+    StructField("doc_title", StringType(), True),
     StructField("dl", IntegerType(), True)
 ])
 

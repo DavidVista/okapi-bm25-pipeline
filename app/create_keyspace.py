@@ -42,6 +42,7 @@ tables = {
     'doc_lengths': """
         CREATE TABLE IF NOT EXISTS doc_lengths (
             doc_id text PRIMARY KEY,
+            doc_title text,
             dl int
         )
     """,
