@@ -1,36 +1,38 @@
 import sys
-import uuid
 from cassandra.cluster import Cluster
 from pyspark import SparkContext
+from preprocess import preprocess_line
+
 
 # Stage 1: Read input file and compute statistics using Spark RDD
 
 print("Reading the uploaded file with Spark")
 
-if len(sys.argv) != 2:
+if len(sys.argv) != 4:
     print("Usage: spark-submit script.py <file_path>")
     sys.exit(1)
 
 file_path = sys.argv[1]
+doc_title = sys.argv[2]
+doc_id = sys.argv[3]
 
 sc = SparkContext(appName="WordCountRDD")
 
 # Read file as RDD of lines
 lines = sc.textFile(file_path)
 
-# Split lines into words, flatten, and filter empty strings
-words = lines.flatMap(lambda line: line.split()) \
-             .filter(lambda w: w != "")
+# Apply preprocessing to each line → flatMap to tokens
+tokens_rdd = lines.flatMap(preprocess_line)
+
 
 # Count term frequencies: (word, 1) -> reduceByKey
-tf_rdd = words.map(lambda w: (w, 1)) \
-              .reduceByKey(lambda a, b: a + b)
+tf_rdd = tokens_rdd.map(lambda w: (w, 1)).reduceByKey(lambda a, b: a + b)
 
 # Collect term frequencies as a list of (word, tf) – small enough for one document
 tf_list = tf_rdd.collect()
 
 # Total number of words
-total_words = words.count()
+total_words = tokens_rdd.count()
 
 sc.stop()
 
@@ -39,9 +41,6 @@ print("Data was prepared")
 # Stage 2: Update database with the obtained statistics
 
 print("Updating ScyllaDB contents")
-
-# Generate new document ID
-doc_id = str(uuid.uuid4())
 
 # Connect to ScyllaDB
 
@@ -54,10 +53,10 @@ session.set_keyspace(KEYSPACE)
 
 # Insert document length
 session.execute(
-    "INSERT INTO doc_lengths (doc_id, dl) VALUES (%s, %s)",
-    (doc_id, total_words)
+    "INSERT INTO doc_lengths (doc_id, doc_title, dl) VALUES (%s, %s, %s)",
+    (doc_id, doc_title, total_words)
 )
-print(f"Inserted doc_lengths for {doc_id}, length={total_words}")
+print(f"Inserted doc_lengths for {doc_id} {doc_title}, length={total_words}")
 
 
 # Insert inverted index (append, no concurrency issues)
