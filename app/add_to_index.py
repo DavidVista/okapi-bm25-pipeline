@@ -21,7 +21,7 @@ sc = SparkContext(appName="WordCountRDD")
 # Read file as RDD of lines
 lines = sc.textFile(file_path)
 
-# Apply preprocessing to each line → flatMap to tokens
+# Apply preprocessing to each line -> flatMap to tokens
 tokens_rdd = lines.flatMap(preprocess_line)
 
 

@@ -10,6 +10,8 @@ spark = SparkSession.builder \
     .config("spark.cassandra.connection.host", "scylla-server") \
     .getOrCreate()
 
+spark.sparkContext.setLogLevel("ERROR")
+
 sc = spark.sparkContext
 
 

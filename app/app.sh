@@ -10,7 +10,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 
 # Install any packages
-pip install -r requirements.txt  
+pip install -qU -r requirements.txt  
 
 # Package the virtual env.
 venv-pack -o .venv.tar.gz

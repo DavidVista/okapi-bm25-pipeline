@@ -15,6 +15,4 @@ hdfs dfs -put -f a.parquet / && \
     spark-submit --driver-memory 4g prepare_data.py && \
     echo "Putting data to hdfs" && \
     hdfs dfs -put data / && \
-    hdfs dfs -ls /data && \
-    hdfs dfs -ls /indexer/data && \
     echo "done data preparation!"
