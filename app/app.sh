@@ -9,8 +9,8 @@ bash start-services.sh
 python3 -m venv .venv
 source .venv/bin/activate
 
-# Install any packages
-pip install -qU -r requirements.txt  
+# Install packages
+pip install -q -r requirements.txt  
 
 # Package the virtual env.
 venv-pack -o .venv.tar.gz
