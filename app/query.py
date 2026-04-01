@@ -2,17 +2,18 @@ from pyspark.sql import SparkSession
 import pyspark.sql.functions as F
 import sys
 import math
+from preprocess import preprocess_line
 
 
 # Create SparkSession
 spark = SparkSession.builder \
-    .appName("ReadFromScylla") \
+    .appName("SearchQuery") \
     .config("spark.cassandra.connection.host", "scylla-server") \
     .getOrCreate()
 
-spark.sparkContext.setLogLevel("ERROR")
-
 sc = spark.sparkContext
+
+sc.setLogLevel("ERROR")
 
 
 # Input
@@ -21,6 +22,9 @@ if len(sys.argv) < 2:
     sys.exit(1)
 
 query = sys.argv[1:]
+
+query = preprocess_line(' '.join(query))
+
 print(f"Starting search for query: {query}")
 
 
@@ -110,7 +114,10 @@ doc_scores_rdd = term_scores_rdd.reduceByKey(lambda x, y: (x[0], x[1] + y[1]))  
 # Take top 10 by score (descending)
 top10 = doc_scores_rdd.takeOrdered(10, key=lambda x: -x[1][1])     # 0 -> doc_id, 1 -> [0 -> doc_title, 1 -> term_score]
 
-for doc_id, (doc_title, score) in top10:
-    print(doc_id, doc_title)
+if not top10:
+    print("No documents matched your query.")
+else:
+    for doc_id, (doc_title, score) in top10:
+        print(doc_id, doc_title)
 
 spark.stop()

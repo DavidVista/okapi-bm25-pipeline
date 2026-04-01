@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source .venv/bin/activate
+
 # Check if a local file path is provided
 if [ $# -ne 1 ]; then
     echo "Usage: $0 <local_file_path>"
@@ -25,8 +27,6 @@ else
     echo "Failed to copy file"
     exit 1
 fi
-
-source .venv/bin/activate
 
 
 # Python of the driver (/app/.venv/bin/python)
