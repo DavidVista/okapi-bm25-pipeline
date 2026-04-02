@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source .venv/bin/activate
+
 # Run MapReduce Pipeline
 bash create_index.sh
 
