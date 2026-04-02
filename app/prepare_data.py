@@ -1,12 +1,7 @@
 from pathvalidate import sanitize_filename
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import regexp_replace, udf
-from pyspark.sql.types import StringType
-from preprocess import preprocess_text
-
-
-# Register the UDF
-preprocess_udf = udf(preprocess_text, StringType())
+from unidecode import unidecode
+import re
 
 
 spark = SparkSession.builder \
@@ -22,21 +17,31 @@ n = 1000
 df = df.select(['id', 'title', 'text']).sample(fraction=100 * n / df.count(), seed=0).limit(n)
 
 
-df = df.withColumn("text", preprocess_udf("text"))
+def safe_filename(filename):
+    """
+    Keep only alphanumeric, underscore, hyphen, and dot.
+    Replace everything else with underscore.
+    """
+    # First, apply pathvalidate to remove filesystem‑invalid characters
+    sanitized = sanitize_filename(filename)
+    # Replace spaces with underscores
+    sanitized = sanitized.replace(" ", "_")
+    # Replace non-ASCII chars
+    sanitized = unidecode(sanitized)
+    # Replace any character that is not alnum, underscore, hyphen, or dot with underscore
+    cleaned = re.sub(r'[^\w\-\.]', '_', sanitized)
+    # Avoid double underscores
+    cleaned = re.sub(r'_+', '_', cleaned)
+    return cleaned
 
 
 def create_doc(row):
-    filename = "data/" + sanitize_filename(str(row['id']) + "_" + row['title']).replace(" ", "_") + ".txt"
+    base = str(row['id']) + "_" + row['title']
+    filename = "data/" + safe_filename(base) + ".txt"
     with open(filename, "w") as f:
         f.write(row['text'])
 
 
 df.foreach(create_doc)
-
-
-# Clean newlines/tabs and write CSV for MapReduce
-df = df.withColumn("title", regexp_replace("title", "[\n\r\t]", " "))
-
-df.write.csv("/input/data", sep="\t")
 
 spark.stop()
